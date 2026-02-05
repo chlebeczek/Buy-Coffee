@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Buy Coffee | Rewards & Payments</title>
+    <style>
+        :root { --mocha: #6F4E37; --bean: #3C2A21; --cream: #fdfaf7; --gold: #c6a664; --green: #27ae60; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--cream); display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; color: var(--bean); }
+        
+        .card { background: white; padding: 30px; border-radius: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); width: 400px; text-align: center; }
+        
+        /* Profile UI */
+        .pfp-circle { width: 80px; height: 80px; border-radius: 50%; background: #f0ebe6; border: 3px solid var(--gold); margin: 0 auto 15px; overflow: hidden; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        #pfp-img { width: 100%; height: 100%; object-fit: cover; display: none; }
+
+        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 12px; box-sizing: border-box; outline-color: var(--mocha); }
+        .btn { background: var(--mocha); color: white; border: none; width: 100%; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+        .btn-add { background: var(--green); margin-bottom: 10px; }
+        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        
+        .hidden { display: none; }
+        .balance-container { display: flex; gap: 10px; margin: 20px 0; }
+        .stat-box { flex: 1; padding: 15px; border-radius: 20px; color: white; }
+        .cash-bg { background: var(--bean); }
+        .reward-bg { background: var(--gold); }
+        
+        .section-label { font-size: 11px; font-weight: 800; color: var(--mocha); text-transform: uppercase; text-align: left; display: block; margin-top: 15px; }
+        #msg { font-size: 13px; margin-top: 10px; font-weight: bold; min-height: 20px; }
+    </style>
+</head>
+<body>
+
+    <div id="loginPage" class="card">
+        <div class="pfp-circle" onclick="document.getElementById('fileIn').click()">
+            <img id="pfp-img" src="">
+            <span id="pfp-ico" style="font-size: 40px;">☕</span>
+        </div>
+        <input type="file" id="fileIn" hidden accept="image/*" onchange="preview(this)">
+        
+        <h2>Coffee Login</h2>
+        <input type="text" id="user" placeholder="Username">
+        <input type="email" id="email" placeholder="Email">
+        <input type="password" id="pass" placeholder="Password">
+        <button class="btn" onclick="login()">Enter Cafe</button>
+    </div>
+
+    <div id="dashboard" class="card hidden">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+            <div class="pfp-circle" style="width: 40px; height: 40px; border-width: 2px; margin: 0;">
+                <img id="dash-pfp" src="" style="width:100%; height:100%; object-fit:cover;">
+            </div>
+            <strong id="hello">User</strong>
+        </div>
+
+        <div class="balance-container">
+            <div class="stat-box cash-bg">
+                <small>BALANCE</small>
+                <h2 id="wallet">$0.00</h2>
+            </div>
+            <div class="stat-box reward-bg">
+                <small>REWARDS</small>
+                <h2 id="beans">0 ☕</h2>
+            </div>
+        </div>
+
+        <button class="btn btn-add" onclick="addFunds()">+ Add $50 & Earn Rewards</button>
+
+        <div style="background: #f9f6f4; padding: 15px; border-radius: 20px;">
+            <span class="section-label">Send Cash</span>
+            <input type="text" id="target" placeholder="@recipient_username">
+            <input type="number" id="amt" placeholder="Amount ($)">
+            <button class="btn" onclick="send()">Send Money</button>
+        </div>
+
+        <div id="msg"></div>
+        <button onclick="location.reload()" style="background:none; border:none; color:#aaa; cursor:pointer; margin-top:15px;">Logout</button>
+    </div>
+
+    <script>
+        let cash = 0;
+        let rewards = 0;
+
+        function preview(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('pfp-img').src = e.target.result;
+                    document.getElementById('pfp-img').style.display = 'block';
+                    document.getElementById('pfp-ico').style.display = 'none';
+                    document.getElementById('dash-pfp').src = e.target.result;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function login() {
+            const u = document.getElementById('user').value;
+            if(!u) return alert("Enter username");
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+            document.getElementById('hello').innerText = u;
+        }
+
+        function addFunds() {
+            cash += 50;
+            rewards += 1; // Earn 1 coffee bean for every $50 added
+            updateUI();
+            notify("Added $50.00 and earned 1 Reward Bean! ☕", "var(--green)");
+        }
+
+        function send() {
+            const target = document.getElementById('target').value;
+            const amount = parseFloat(document.getElementById('amt').value);
+            
+            if(!target || isNaN(amount) || amount <= 0) {
+                return notify("Enter username and valid amount", "red");
+            }
+            if(amount > cash) {
+                return notify("Insufficient balance!", "red");
+            }
+
+            cash -= amount;
+            updateUI();
+            notify("Sent $" + amount.toFixed(2) + " to " + target, "var(--mocha)");
+            document.getElementById('amt').value = "";
+            document.getElementById('target').value = "";
+        }
+
+        function updateUI() {
+            document.getElementById('wallet').innerText = "$" + cash.toFixed(2);
+            document.getElementById('beans').innerText = rewards + " ☕";
+        }
+
+        function notify(text, color) {
+            const m = document.getElementById('msg');
+            m.innerText = text;
+            m.style.color = color;
+        }
+    </script>
+</body>
+</html>
